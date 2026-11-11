@@ -1,0 +1,19 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 4
+  concurrency: 80
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://resumepro-ai.web.app
+  - variable: YOUPI_API_URL
+    availability:
+      - RUNTIME
+  - variable: YOUPI_MERCHANT_ID
+    availability:
+      - RUNTIME
+  - variable: YOUPI_MERCHANT_API_KEY
+    secret: YOUPI_MERCHANT_API_KEY
+  - variable: YOUPI_WEBHOOK_SECRET
+    secret: YOUPI_WEBHOOK_SECRET

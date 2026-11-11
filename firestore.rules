@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // Resumes collection (user owns all resume data)
+    match /resumes/{resumeId} {
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid) || resource.data.isPublic == true || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Payments collection (server-authoritative writes via Firebase Admin SDK)
+    match /payments/{paymentId} {
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false; // Only backend API / Admin SDK may write payment records
+    }
+
+    // Subscriptions collection (server-authoritative writes)
+    match /subscriptions/{subId} {
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Invoices collection (server-authoritative writes)
+    match /invoices/{invoiceId} {
+      allow read: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Payment Audit Logs (admin read-only, server write-only)
+    match /payment_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
